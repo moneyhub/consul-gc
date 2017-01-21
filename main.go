@@ -83,13 +83,14 @@ func main() {
 	instanceId, err := ec2cluster.DiscoverInstanceID()
 	if err != nil {
 		log.Printf("[FATAL] Could not find the ec2 instance ID: %s", err)
+		os.Exit(3)
 	}
 	log.Printf("[INFO] Detected as running inside EC2 instance %s", instanceId)
 
 	desiredActive, err := getDesiredInstanceCount(instanceId)
 	if err != nil {
 		log.Printf("[FATAL] Failed to find the desired number of servers: %s", err)
-		os.Exit(3)
+		os.Exit(4)
 	}
 	log.Printf("[INFO] Setting desired active members to %d", *desiredActive)
 

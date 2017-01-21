@@ -1,5 +1,5 @@
 FROM alpine
-MAINTAINER James Tancock <james.tancock@momentumft.co.uk
+MAINTAINER James Tancock <james.tancock@momentumft.co.uk>
 
 ENV GOPATH /go
 ENV REPOSRC /go/src/github.com/momentumft/consul-gc
