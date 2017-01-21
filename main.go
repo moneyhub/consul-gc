@@ -18,11 +18,13 @@ import (
 const VERSION = "1.0.0"
 
 var (
-	v bool
+	v        bool
+	interval int
 )
 
 func init() {
 	flag.BoolVar(&v, "v", false, "show version")
+	flag.IntVar(&interval, "interval", 60, "interval between checking members")
 	flag.Parse()
 }
 
@@ -53,6 +55,7 @@ func getDesiredInstanceCount(instanceId string) (*int64, error) {
 
 func removeFailed(agent *api.Agent, failed []string) error {
 	for _, memberName := range failed {
+		log.Printf("[INFO] Removing Consul member: %s", memberName)
 		err := agent.ForceLeave(memberName)
 		if err != nil {
 			return err
@@ -81,16 +84,18 @@ func main() {
 	if err != nil {
 		log.Printf("[FATAL] Could not find the ec2 instance ID: %s", err)
 	}
+	log.Printf("[INFO] Detected as running inside EC2 instance %s", instanceId)
 
 	desiredActive, err := getDesiredInstanceCount(instanceId)
 	if err != nil {
 		log.Printf("[FATAL] Failed to find the desired number of servers: %s", err)
 		os.Exit(3)
 	}
+	log.Printf("[INFO] Setting desired active members to %d", *desiredActive)
 
 	agent := client.Agent()
 	for {
-		time.Sleep(time.Second * 60)
+		time.Sleep(time.Second * time.Duration(interval))
 
 		members, err := agent.Members(false)
 		if err != nil {
@@ -100,18 +105,17 @@ func main() {
 
 		alive := 0
 		var failed []string
-		failed = make([]string, len(members))
-		for i, member := range members {
+		for _, member := range members {
 			if member.Status == int(serf.StatusAlive) {
 				alive++
 			}
 
 			if member.Status == int(serf.StatusFailed) {
-				failed[i] = member.Name
+				failed = append(failed, member.Name)
 			}
 		}
 
-		if alive >= int(*desiredActive) {
+		if alive >= int(*desiredActive) && len(failed) > 0 {
 			err := removeFailed(agent, failed)
 			if err != nil {
 				log.Printf("[ERROR] Failed to remove member: %s", err)
