@@ -13,7 +13,6 @@ RUN packages='go git gcc libc-dev libgcc' \
     && apk update \
     && apk add $packages \
     && cd $REPOSRC \
-    && go get -v ./... \
     && go build -x -o /usr/bin/consul-gc . \
     && apk del $packages \
     && rm -rf $GOPATH \
