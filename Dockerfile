@@ -1,4 +1,4 @@
-FROM alpine
+FROM alpine:3.23.3
 MAINTAINER James Tancock <james.tancock@momentumft.co.uk>
 
 ENV GOPATH /go
